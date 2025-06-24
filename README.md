@@ -1,1 +1,3 @@
-APS360 Group 16 project: Real-Time Facial Expression Analysis via Deep Learning
+# APS360 Group 16 project: Real-Time Facial Expression Analysis via Deep Learning
+
+Facial expressions represent one of the most fundamental aspects of human communication. They can convey emotions and intentions without speech. Nowadays, with the rapid advancements in artificial intelligence and robotics, the accurate recognition and interpretation of these expressions has become increasingly crucial. This project focuses on developing a deep learning model that can recognize and classify seven fundamental human emotions—happiness, sadness, fear, disgust, anger, neutral, and surprise—with real-time responsiveness. 
