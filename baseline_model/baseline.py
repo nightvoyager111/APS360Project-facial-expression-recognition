@@ -1,4 +1,5 @@
 import os
+
 import numpy as np
 from skimage.io import imread
 from skimage.transform import resize
@@ -10,6 +11,7 @@ import matplotlib.pyplot as plt
 import warnings
 from sklearn.preprocessing import StandardScaler
 from sklearn.exceptions import ConvergenceWarning
+from joblib import dump, load
 
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 # warnings.filterwarnings("ignore")  # Commented out to only suppress ConvergenceWarning
@@ -117,6 +119,7 @@ def evaluate_dataset(train_dir, test_dir, dataset_name):
     y_pred = clf.predict(X_test)
     print("Accuracy:", accuracy_score(y_test, y_pred))
     print(classification_report(y_test, y_pred, target_names=target_names))
+    dump((clf, scaler, target_names), f'{dataset_name}_hog_svm.joblib')
 
     return fig
 
