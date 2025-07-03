@@ -1,0 +1,19 @@
+epochs, lr, and batch_size combinations
+
+epochs: 1 to 10
+lr: 0.0001,0.0005, 0.001, 0.005, 0.01, 0.05, 0.1. 0.5
+batch_size: 32, 64, 128
+
+combinations:
+#testcase   epochs  lr      batch_size
+1           5       0.0001  32
+2           5       0.001   64
+3           5       0.01    128
+4           10      0.0005  32
+5           10      0.005   64g
+6           10      0.05    128
+7           3       0.001   32
+8           7       0.01    64
+9           7       0.1     128
+10          7       0.5     32
+11          7       0.001   50       82.7239% | Train Loss: 0.4856, Train Err: 0.1728 | Val Loss: 6.5338, Val Err: 0.8881
