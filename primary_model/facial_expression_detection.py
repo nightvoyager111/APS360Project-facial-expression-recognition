@@ -151,7 +151,7 @@ def main():
 
         print(f"Epoch {epoch}: Train Accuracy: {train_acc*100:.4f}% | Train Loss: {train_loss:.4f}, Train Err: {train_err:.4f} | Val Loss: {val_loss:.4f}, Val Err: {val_err:.4f}")
         print(classification_report(all_targets, all_preds, target_names=train_data.classes, zero_division=0))
-
+    torch.save(model.state_dict(), 'primary_model/best_model_1.pth')
     # Plotting
     epochs = range(1, len(train_errors) + 1)
     plt.figure()
@@ -176,6 +176,7 @@ def main():
     plt.ylim(bottom=0)
     plt.savefig('primary_model/PM_train_vs_valLoss.png')
     plt.show()
+    
 
 if __name__ == "__main__":
     main()

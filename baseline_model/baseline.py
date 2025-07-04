@@ -20,7 +20,7 @@ from data_set_combine import load_and_combine_datasets
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 # warnings.filterwarnings("ignore")  # Commented out to only suppress ConvergenceWarning
 
-"""FERPLUS_TRAIN_DIR = 'fer2013plus/fer2013/train'
+FERPLUS_TRAIN_DIR = 'fer2013plus/fer2013/train'
 FERPLUS_TEST_DIR = 'fer2013plus/fer2013/test'
 RAFDB_TRAIN_DIR = 'RAF-DB/train'
 RAFDB_TEST_DIR = 'RAF-DB/test'
@@ -33,7 +33,7 @@ HOG_PARAMS = {
 }
 RAFDB_CLASS_ORDER = ['1', '2', '3', '4', '5', '6', '7']
 RAFDB_CLASS_NAMES = ['surprise', 'fear', 'disgust', 'happiness', 'sadness', 'anger', 'neutral']
-"""
+
 
 def get_classes(train_dir, test_dir):
     train_classes = set([d for d in os.listdir(train_dir) if os.path.isdir(os.path.join(train_dir, d))])
@@ -128,7 +128,6 @@ def plot_learning_curve(X, y, dataset_name):
     return fig
 """
 def main():
-    print("\n===== Combined FERPlus + RAF-DB =====")
     X_train_img, y_train, X_test_img, y_test, class_names = load_and_combine_datasets()
 
     print(f"Loaded {len(X_train_img)} training and {len(X_test_img)} test images.")
@@ -153,7 +152,7 @@ def main():
     y_pred = clf.predict(X_test)
     print("Accuracy:", accuracy_score(y_test, y_pred))
     print(classification_report(y_test, y_pred, target_names=class_names))
-    dump((clf, scaler, class_names), 'combined_hog_svm.joblib')
+    dump((clf, scaler, class_names), 'combined_unbalanced_hog_svm.joblib')
 
     plt.show()
 
