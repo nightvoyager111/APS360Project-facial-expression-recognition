@@ -12,12 +12,15 @@ import warnings
 from sklearn.preprocessing import StandardScaler
 from sklearn.exceptions import ConvergenceWarning
 from joblib import dump, load
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../data_set')))
+from data_set_combine import load_and_combine_datasets
 
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 # warnings.filterwarnings("ignore")  # Commented out to only suppress ConvergenceWarning
 
-# --- CONFIGURATION ---
-FERPLUS_TRAIN_DIR = 'fer2013plus/fer2013/train'
+"""FERPLUS_TRAIN_DIR = 'fer2013plus/fer2013/train'
 FERPLUS_TEST_DIR = 'fer2013plus/fer2013/test'
 RAFDB_TRAIN_DIR = 'RAF-DB/train'
 RAFDB_TEST_DIR = 'RAF-DB/test'
@@ -30,6 +33,7 @@ HOG_PARAMS = {
 }
 RAFDB_CLASS_ORDER = ['1', '2', '3', '4', '5', '6', '7']
 RAFDB_CLASS_NAMES = ['surprise', 'fear', 'disgust', 'happiness', 'sadness', 'anger', 'neutral']
+"""
 
 def get_classes(train_dir, test_dir):
     train_classes = set([d for d in os.listdir(train_dir) if os.path.isdir(os.path.join(train_dir, d))])
@@ -72,7 +76,7 @@ def plot_learning_curve(X, y, dataset_name):
     fig = plt.figure()
     plt.plot(train_sizes, train_error, 'o-', label='Training error')
     plt.plot(train_sizes, val_error, 'o-', label='Validation error')
-    plt.title(f'Learning Curve ({dataset_name})')
+    plt.title(f'Learning Curve')
     plt.xlabel('Training set size')
     plt.ylabel('Error')
     plt.legend()
@@ -80,7 +84,7 @@ def plot_learning_curve(X, y, dataset_name):
     plt.tight_layout()
     return fig
 
-def evaluate_dataset(train_dir, test_dir, dataset_name):
+"""def evaluate_dataset(train_dir, test_dir, dataset_name):
     print(f"\n===== {dataset_name} =====")
     if dataset_name == "RAF-DB":
         # Use fixed class order and names for RAF-DB
@@ -122,11 +126,37 @@ def evaluate_dataset(train_dir, test_dir, dataset_name):
     dump((clf, scaler, target_names), f'{dataset_name}_hog_svm.joblib')
 
     return fig
-
+"""
 def main():
-    fig1 = evaluate_dataset(FERPLUS_TRAIN_DIR, FERPLUS_TEST_DIR, "FERPlus")
-    fig2 = evaluate_dataset(RAFDB_TRAIN_DIR, RAFDB_TEST_DIR, "RAF-DB")
-    plt.show()  # This will show all open figures at once
+    print("\n===== Combined FERPlus + RAF-DB =====")
+    X_train_img, y_train, X_test_img, y_test, class_names = load_and_combine_datasets()
+
+    print(f"Loaded {len(X_train_img)} training and {len(X_test_img)} test images.")
+
+    print("Extracting HOG features for training...")
+    X_train = extract_hog_features(X_train_img)
+
+    print("Extracting HOG features for test...")
+    X_test = extract_hog_features(X_test_img)
+
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+
+    fig = plot_learning_curve(X_train, y_train, "Combined")
+
+    print("Training SVM...")
+    clf = LinearSVC(dual=False, max_iter=2000)
+    clf.fit(X_train, y_train)
+
+    print("Evaluating...")
+    y_pred = clf.predict(X_test)
+    print("Accuracy:", accuracy_score(y_test, y_pred))
+    print(classification_report(y_test, y_pred, target_names=class_names))
+    dump((clf, scaler, class_names), 'combined_hog_svm.joblib')
+
+    plt.show()
+
 
 if __name__ == "__main__":
     main()
