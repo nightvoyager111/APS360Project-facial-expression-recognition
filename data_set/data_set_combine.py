@@ -4,6 +4,11 @@ from skimage.io import imread
 from skimage.transform import resize
 from skimage.feature import hog
 import warnings
+import matplotlib.pyplot as plt
+import random
+from scipy.ndimage import rotate
+from skimage.transform import resize
+
 
 
 # --- CONFIGURATION ---
@@ -79,3 +84,65 @@ def load_and_combine_datasets():
 
     return X_train, y_train, X_test, y_test, combined_classes
 
+def show_sample_images(X, y, class_names, num_per_class=2):
+    fig, axes = plt.subplots(len(class_names), num_per_class, figsize=(num_per_class * 2, len(class_names) * 2))
+    for class_idx, class_name in enumerate(class_names):
+        i = 0
+        for idx in range(len(X)):
+            if y[idx] == class_idx:
+                ax = axes[class_idx, i] if num_per_class > 1 else axes[class_idx]
+                ax.imshow(X[idx], cmap='gray')
+                ax.axis('off')
+                ax.set_title(class_name if i == 0 else "")
+                i += 1
+                if i == num_per_class:
+                    break
+    plt.tight_layout()
+    plt.show(block=True)
+    plt.show()
+    
+def augment_img(img):
+    """Apply random augmentations to a single image"""
+    # 1. Random horizontal flip
+    if random.random() < 0.5:
+        img = np.fliplr(img)
+    # 2. Random small rotation
+    if random.random() < 0.5:
+        angle = random.uniform(-10, 10)
+        img = rotate(img, angle, reshape=False, mode='nearest')
+        
+    # 3. Random brightness shift
+    if random.random() < 0.5:
+        brightness_factor = random.uniform(0.8, 1.2)
+        img = np.clip(img * brightness_factor, 0, 1)
+        
+    # 4.Add Gaussian noise
+    if random.random() < 0.5:
+        noise = np.random.normal(0, 0.03, img.shape)
+        img = np.clip(img + noise, 0, 1)
+        
+    # 5. Random crop and resize
+    if random.random() < 0.5:
+        zoom_factor = random.uniform(0.85, 1.0)
+        h, w = img.shape
+        zh, zw = int(h * zoom_factor), int(w * zoom_factor)
+        top = random.randint(0, h - zh)
+        left = random.randint(0, w - zw)
+        img = img[top:top + zh, left:left + zw]
+        img = resize(img, IMAGE_SIZE, anti_aliasing=True)
+        
+    return img
+
+def augment_dataset(X, y, times=1):
+    """Apply augmentations by applying random transformations to each image"""
+    X_augmented, y_augmented = [], []
+    
+    for i in range(len(X)):
+        for _ in range(times):  
+            img_aug = augment_img(X[i])
+            X_augmented.append(img_aug)
+            y_augmented.append(y[i])
+    X_augmented = np.array(X_augmented)
+    y_augmented = np.array(y_augmented)
+    return np.concatenate((X, X_augmented)), np.concatenate((y, y_augmented))
+       

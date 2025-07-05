@@ -16,6 +16,8 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../data_set')))
 from data_set_combine import load_and_combine_datasets
+from data_set_combine import show_sample_images
+from data_set_combine import augment_dataset
 
 warnings.filterwarnings("ignore", category=ConvergenceWarning)
 # warnings.filterwarnings("ignore")  # Commented out to only suppress ConvergenceWarning
@@ -26,7 +28,7 @@ RAFDB_TRAIN_DIR = 'RAF-DB/train'
 RAFDB_TEST_DIR = 'RAF-DB/test'
 IMAGE_SIZE = (48, 48)
 HOG_PARAMS = {
-    'orientations': 8,
+    'orientations': 8,  
     'pixels_per_cell': (8, 8),
     'cells_per_block': (2, 2),
     'block_norm': 'L2-Hys'
@@ -129,9 +131,14 @@ def plot_learning_curve(X, y, dataset_name):
 """
 def main():
     X_train_img, y_train, X_test_img, y_test, class_names = load_and_combine_datasets()
-
+    #Display sample images (visual sanity check)
+    show_sample_images(X_train_img, y_train, class_names, num_per_class=2)
     print(f"Loaded {len(X_train_img)} training and {len(X_test_img)} test images.")
 
+    # Augment the training dataset
+    X_train_img, y_train = augment_dataset(X_train_img, y_train, times=2)
+    print(f"After augmentation: {len(X_train_img)} training images.")
+    
     print("Extracting HOG features for training...")
     X_train = extract_hog_features(X_train_img)
 
