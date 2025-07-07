@@ -8,8 +8,6 @@ from datetime import datetime
 import os
 from torchvision import datasets, transforms
 
-from sklearn.utils.class_weight import compute_class_weight
-
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 

@@ -9,19 +9,21 @@ from PIL import Image
 
 # Append parent directory to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from primary_model.facial_expression_detection import EmotionAlexNet
-
+#from primary_model.facial_expression_detection import EmotionAlexNet
+from primary_model.ame_try1 import EmotionAlexNet
 # Load trained model
 
 
-checkpoint = torch.load('primary_model/best_model_1.pth', map_location=torch.device('cpu'))
+checkpoint = torch.load('./models/model_EmotionAlexNet_bs64_lr0.0005_epoch18_20250707_151009.pt', map_location=torch.device('cpu'))
 model = EmotionAlexNet(num_classes=7, use_residual=True)
 
 # Filter out classifier parameters from checkpoint
-filtered_state_dict = {k: v for k, v in checkpoint.items() if not k.startswith('classifier.')}
+#filtered_state_dict = {k: v for k, v in checkpoint.items() if not k.startswith('classifier.')}
 
 # Load weights except the classifier
-model.load_state_dict(filtered_state_dict, strict=False)
+#model.load_state_dict(filtered_state_dict, strict=False)
+
+model.load_state_dict(checkpoint)
 
 model.eval()
 
@@ -49,13 +51,14 @@ TEXT_THICKNESS = 2
 
 # Preprocessing (match training)
 transform = transforms.Compose([
-    transforms.Grayscale(),
+    #transforms.Grayscale(),
     transforms.Resize((48, 48)),
     transforms.ToTensor()
 ])
 
 # Initialize emotion count
 emotion_counter = defaultdict(int)
+
 
 # Face detection
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
@@ -72,16 +75,22 @@ while True:
     faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
 
     for (x, y, w, h) in faces:
-        roi_gray = gray[y:y+h, x:x+w]
-        pil_img = Image.fromarray(roi_gray)
+        roi_color = gray[y:y+h, x:x+w]
+        pil_img = Image.fromarray(roi_color).convert('RGB') 
         input_tensor = transform(pil_img).unsqueeze(0)
 
         with torch.no_grad():
             output = model(input_tensor)
-            pred = torch.argmax(output, dim=1).item()
+            # Convert output into probabilities
+            probs = torch.exp(output)
+            
+            pred = torch.argmax(probs, dim=1).item()
+            
             raw_label = emotion_classes[pred]
             readable_emotion = EMOTION_MAPPING.get(raw_label, raw_label)
+            
             emotion_counter[readable_emotion] += 1
+            
 
         # Draw box and label
         cv2.rectangle(frame, (x, y), (x+w, y+h), BOX_COLOR, 1)
