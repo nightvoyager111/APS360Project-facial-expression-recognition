@@ -210,7 +210,7 @@ def main():
         transforms.RandomHorizontalFlip(),
         transforms.RandomRotation(10),
         transforms.RandomAffine(degrees=0, translate=(0.1, 0.1)),
-        transforms.ColorJitter(brightness=0.2, contrast=0.2),
+        transforms.ColorJitter(brightness=0.3, contrast=0.3),
         transforms.ToTensor(),
     ])
 
@@ -229,7 +229,7 @@ def main():
     model = EmotionAlexNet(num_classes=len(train_data.classes), use_residual=True)
 
     # Train model
-    best_model_path = train(model, train_data, valid_data, batch_size=64, learning_rate=0.001, num_epochs=15, save_dir=save_dir)
+    best_model_path = train(model, train_data, valid_data, batch_size=64, learning_rate=0.0005, num_epochs=20, save_dir=save_dir)
 
 if __name__ == '__main__':
     main()
