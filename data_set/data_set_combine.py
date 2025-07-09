@@ -9,6 +9,8 @@ import random
 from scipy.ndimage import rotate
 from skimage.transform import resize
 
+import collections
+
 
 
 # --- CONFIGURATION ---
@@ -146,3 +148,51 @@ def augment_dataset(X, y, times=1):
     y_augmented = np.array(y_augmented)
     return np.concatenate((X, X_augmented)), np.concatenate((y, y_augmented))
        
+       
+def show_augmented_versions(X, y, class_names, target_class_idx=0):
+    fig, axes = plt.subplots(1, 5, figsize=(15, 3))
+    for idx in range(len(X)):
+        if y[idx] == target_class_idx:
+            base_img = X[idx]
+            break
+        
+    for i in range(5):
+        aug_img = augment_img(base_img)
+        ax = axes[i]
+        ax.imshow(aug_img, cmap='gray')
+        ax.axis('off')
+        
+    plt.suptitle(f"Augmented Samples for Class: {class_names[target_class_idx]}")
+    plt.tight_layout()
+    plt.show()
+        
+    
+   
+def show_class_distribution(y, class_names):
+    counts = collections.Counter(y)
+    ordered_counts = [counts[i] for i in range(len(class_names))]
+    
+    plt.figure(figsize=(8, 5))
+    bars = plt.bar(class_names, ordered_counts, color="skyblue")
+    plt.title("Number of Samples per Class")
+    plt.ylabel("Number")
+    
+    
+    for bar, count in zip(bars, ordered_counts):
+        height = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width() / 2, height + 5, str(count), 
+                 ha='center', va='bottom', fontsize=9, color='black')
+    plt.tight_layout()
+    plt.savefig("visual_class_distribution.png")
+    plt.show()
+
+    
+           
+def main():
+    X_train_img, y_train, X_test_img, y_test, class_names = load_and_combine_datasets()
+    #show_augmented_versions(X_train_img, y_train, class_names, target_class_idx=0)  
+    show_class_distribution(y_train, class_names)
+ 
+if __name__ == "__main__":
+    main()
+   
