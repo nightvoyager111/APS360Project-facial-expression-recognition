@@ -29,8 +29,13 @@ HOG_PARAMS = {
 
 
 # Standardized emotion classes
-STANDARD_EMOTIONS = {'happy': 'happiness', 'happiness': 'happiness', '4': 'happiness', 'sad': 'sadness', 'sadness': 'sadness', '5': 'sadness', 'fear': 'fear', '2': 'fear', 'disgust': 'disgust',
-                    '3': 'disgust', 'angry': 'anger', 'anger': 'anger', '6': 'anger', 'neutral': 'neutral', '7': 'neutral', 'surprise': 'surprise', '1': 'surprise'}
+STANDARD_EMOTIONS = {'happy': 'happiness', 'happiness': 'happiness', '4': 'happiness', 
+                     'sad': 'sadness', 'sadness': 'sadness', '5': 'sadness', 
+                     'fear': 'fear', '2': 'fear', 
+                     'disgust': 'disgust','3': 'disgust', 
+                     'angry': 'anger', 'anger': 'anger', '6': 'anger', 
+                     'neutral': 'neutral', '7': 'neutral', 
+                     'surprise': 'surprise', '1': 'surprise'}
 
 
 def get_standard_classes():
@@ -87,21 +92,17 @@ def load_and_combine_datasets():
 
     return X_train, y_train, X_test, y_test, combined_classes
 
-def show_sample_images(X, y, class_names, num_per_class=2):
-    fig, axes = plt.subplots(len(class_names), num_per_class, figsize=(num_per_class * 2, len(class_names) * 2))
+def show_sample_images(X, y, class_names):
+    fig, axes = plt.subplots(1, len(class_names), figsize=(len(class_names) * 2, 2))
     for class_idx, class_name in enumerate(class_names):
         i = 0
         for idx in range(len(X)):
             if y[idx] == class_idx:
-                ax = axes[class_idx, i] if num_per_class > 1 else axes[class_idx]
-                ax.imshow(X[idx], cmap='gray')
-                ax.axis('off')
-                ax.set_title(class_name if i == 0 else "")
-                i += 1
-                if i == num_per_class:
-                    break
+                axes[class_idx].imshow(X[idx], cmap='gray')
+                axes[class_idx].set_title(class_name)
+                axes[class_idx].axis('off')
+                break
     plt.tight_layout()
-    plt.show(block=True)
     plt.show()
     
 def augment_img(img):
@@ -238,7 +239,8 @@ def main():
     X_train_img, y_train, X_test_img, y_test, class_names = load_and_combine_datasets()
     #show_augmented_versions(X_train_img, y_train, class_names, target_class_idx=0)  
     #show_class_distribution(y_train, class_names)
-    show_dataset_distribution_comparison()
+    show_sample_images(X_train_img, y_train, class_names)
+    #show_dataset_distribution_comparison()
 if __name__ == "__main__":
     main()
    
