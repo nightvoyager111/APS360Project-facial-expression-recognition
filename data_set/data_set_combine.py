@@ -10,6 +10,7 @@ from scipy.ndimage import rotate
 from skimage.transform import resize
 
 import collections
+from matplotlib import cm
 
 
 
@@ -172,27 +173,72 @@ def show_class_distribution(y, class_names):
     counts = collections.Counter(y)
     ordered_counts = [counts[i] for i in range(len(class_names))]
     
-    plt.figure(figsize=(8, 5))
-    bars = plt.bar(class_names, ordered_counts, color="skyblue")
-    plt.title("Number of Samples per Class")
-    plt.ylabel("Number")
+    # Add a color fade effect to the bars
+    colors = cm.Blues(np.linspace(0.4, 0.9, len(class_names)))
     
-    
+    plt.figure(figsize=(10, 6))
+    bars = plt.bar(class_names, ordered_counts, color=colors, edgecolor='black', linewidth=0.6, width=0.6)
+
     for bar, count in zip(bars, ordered_counts):
         height = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width() / 2, height + 5, str(count), 
+        plt.text(bar.get_x() + bar.get_width() / 2, height + 3, str(count), 
                  ha='center', va='bottom', fontsize=9, color='black')
+    
+    plt.grid(axis='y', linestyle='--', alpha=0.6)
+    plt.title("Number of Samples per Class", fontsize=14, fontweight='bold')
+    plt.ylabel("Number", fontsize=12)
+    
     plt.tight_layout()
     plt.savefig("visual_class_distribution.png")
     plt.show()
 
+ 
+def show_dataset_distribution_comparison():
+    class_names = get_standard_classes()
+    class_to_idx = {cls: idx for idx, cls in enumerate(class_names)}
     
-           
+    # Load separately
+    _, y_fer = load_image_folder(FERPLUS_TRAIN_DIR, class_to_idx)
+    _, y_raf = load_image_folder(RAFDB_TRAIN_DIR, class_to_idx)
+    
+    # Count
+    fer_counts = collections.Counter(y_fer)
+    raf_counts = collections.Counter(y_raf)
+    fer_vals = [fer_counts[i] for i in range(len(class_names))]
+    raf_vals = [raf_counts[i] for i in range(len(class_names))]
+    total_vals = [f + r for f, r in zip(fer_vals, raf_vals)]
+
+    x = np.arange(len(class_names))
+    width = 0.6
+    fig, ax = plt.subplots(figsize=(12, 6))
+    bars1 = ax.bar(x, fer_vals, label='FER2013+', color=cm.Oranges(0.6))
+    bars2 = ax.bar(x, raf_vals, bottom=fer_vals, label='RAF-DB', color=cm.Blues(0.6))
+    
+    # Label each part of the stack
+    for idx in range(len(class_names)):
+        # Label FER
+        ax.text(x[idx], fer_vals[idx] / 2, str(fer_vals[idx]),
+                ha='center', va='center', fontsize=9, color='black')
+        # Label RAF
+        ax.text(x[idx], fer_vals[idx] + raf_vals[idx] / 2, str(raf_vals[idx]),
+                ha='center', va='center', fontsize=9, color='black')
+            
+    ax.set_title("Sample Count per Class in FER2013+ vs RAF-DB", fontsize=14, fontweight='bold')
+    ax.set_ylabel("Number of Samples", fontsize=12)
+    ax.set_xticks(x)
+    ax.set_xticklabels(class_names, rotation=45)
+    ax.legend()
+    ax.grid(axis='y', linestyle='--', alpha=0.6)
+
+    plt.tight_layout()
+    plt.savefig("visual_dataset_comparison.png")
+    plt.show()
+    
 def main():
     X_train_img, y_train, X_test_img, y_test, class_names = load_and_combine_datasets()
     #show_augmented_versions(X_train_img, y_train, class_names, target_class_idx=0)  
-    show_class_distribution(y_train, class_names)
- 
+    #show_class_distribution(y_train, class_names)
+    show_dataset_distribution_comparison()
 if __name__ == "__main__":
     main()
    
