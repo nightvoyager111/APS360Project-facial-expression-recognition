@@ -7,7 +7,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from primary_model.ame_try1 import EmotionAlexNet
 
 model = EmotionAlexNet(num_classes=7, use_residual=True)
-checkpoint = torch.load('../models/model_EmotionAlexNet_bs64_lr0.0005_epoch18_20250707_151009.pt', map_location=torch.device('cpu'))
+checkpoint = torch.load('models/model_EmotionAlexNet_bs64_lr0.0005_epoch18_20250707_151009.pt', map_location=torch.device('cpu'))
 model.load_state_dict(checkpoint)
 model.eval()
 

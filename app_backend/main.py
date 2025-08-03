@@ -2,7 +2,7 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 from io import BytesIO
-from model_inference import predict_emotion
+from app_backend.model_inference import predict_emotion
 
 app = FastAPI()
 
