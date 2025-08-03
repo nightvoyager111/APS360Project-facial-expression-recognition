@@ -21,7 +21,7 @@ async def predict(file: UploadFile = File(...)):
         # Read image file
         contents = await file.read()
         image = Image.open(BytesIO(contents))
-        
+        print(f"Received file: {file.filename}")
         emotion = predict_emotion(image)
         
         return {"emotion": emotion}

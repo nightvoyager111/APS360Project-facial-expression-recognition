@@ -24,8 +24,13 @@ export default function WebcamCapture() {
         ctx.drawImage(video, 0, 0);
 
         canvas.toBlob(async (blob) => {
+            if (!blob) {
+                console.error('Blob is null, skipping submission.');
+                setEmotion('Error: No image captured');
+                return;
+            }
             const formData = new FormData();
-            formData.append('image', blob, 'frame.jpg');
+            formData.append('file', blob, 'frame.jpg');
 
             try {
                 const response = await fetch('http://127.0.0.1:8000/predict', {
@@ -49,7 +54,7 @@ export default function WebcamCapture() {
             <button onClick={CaptureAndSend} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                 Detect Emotion
             </button>
-            <p className="text-lg">Detected Emotion: {emotion}</p>
+            <p className="text-lg font-medium text-gray-800">Detected Emotion: {emotion}</p>
         </div>
     );
 } 

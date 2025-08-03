@@ -4,9 +4,9 @@ from torchvision import transforms
 import sys, os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from primary_model.ame_try1 import EmotionalAlextNet
+from primary_model.ame_try1 import EmotionAlextNet
 
-model = EmotionalAlextNet(num_classes=7, use_residual=True)
+model = EmotionAlextNet(num_classes=7, use_residual=True)
 checkpoint = torch.load('./models/model_EmotionAlexNet_bs64_lr0.0005_epoch18_20250707_151009.pt', map_location=torch.device('cpu'))
 model.load_state_dict(checkpoint)
 model.eval()
@@ -29,6 +29,7 @@ transform = transforms.Compose([
 ])
 
 def predict_emotion(pil_img):
+    print("Received image for prediction:", pil_img.size)
     img = pil_img.convert('RGB')
     tensor = transform(img).unsqueeze(0)  
     with torch.no_grad():
