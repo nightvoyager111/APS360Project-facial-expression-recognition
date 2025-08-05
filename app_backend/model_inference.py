@@ -2,6 +2,9 @@ import torch
 from PIL import Image
 from torchvision import transforms
 import sys, os
+import cv2
+from collections import defaultdict
+import numpy as np
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from primary_model.ame_try1 import EmotionAlexNet
@@ -11,6 +14,7 @@ checkpoint = torch.load('models/model_EmotionAlexNet_bs64_lr0.0005_epoch18_20250
 model.load_state_dict(checkpoint)
 model.eval()
 
+emotion_classes = ['anger', 'disgust', 'fear', 'happiness', 'neutral', 'sadness', 'surprise']   
 EMOTION_MAPPING = {
     'anger': 'ANGRY',
     'disgust': 'DISGUSTED',
@@ -28,14 +32,33 @@ transform = transforms.Compose([
     transforms.ToTensor()
 ])
 
+# OpenCV face detector
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
 def predict_emotion(pil_img):
-    print("Received image for prediction:", pil_img.size)
-    img = pil_img.convert('RGB')
-    tensor = transform(img).unsqueeze(0)  
-    with torch.no_grad():
-        output = model(tensor)
-        probs = torch.exp(output)
-        pred_idx = torch.argmax(probs, dim=1).item()
-        emotion = list(EMOTION_MAPPING.keys())[pred_idx]
-        return emotion
+    cv_img = np.array(pil_img.convert('RGB'))
+    gray = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
     
+    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
+    if len(faces) == 0:
+        return {"error": "No face detected"}
+    
+    x, y, w, h = sorted(faces, key=lambda b: b[2] * b[3], reverse=True)[0]
+    
+    face_img = Image.fromarray(gray[y:y+h, x:x+w]).convert('RGB')
+    input_tensor = transform(face_img).unsqueeze(0)
+
+    with torch.no_grad():
+        output = model(input_tensor)
+        probs = torch.exp(output).squeeze().numpy()
+        
+        
+    pred_idx = int(np.argmax(probs))
+    emotion = emotion_classes[pred_idx]
+    
+    prob_dict = {label: float(f"{probs[i]:.3f}") for i, label in enumerate(emotion_classes)}
+    return {
+        "emotion": emotion.upper(),
+        "probabilities": prob_dict,
+        "bounding_box": {"x": int(x), "y": int(y), "w": int(w), "h": int(h)}
+    }
