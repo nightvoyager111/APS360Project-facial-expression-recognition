@@ -5,3 +5,6 @@ torch
 torchvision
 matplotlib
 python-multipart
+opencv-python
+numpy
+
