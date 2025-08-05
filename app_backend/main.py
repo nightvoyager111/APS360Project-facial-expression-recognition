@@ -22,9 +22,9 @@ async def predict(file: UploadFile = File(...)):
         contents = await file.read()
         image = Image.open(BytesIO(contents))
         print(f"Received file: {file.filename}")
-        emotion = predict_emotion(image)
+        result = predict_emotion(image)
         
-        return {"emotion": emotion}
+        return result
     except Exception as e:
         return {"error": str(e)}
 
