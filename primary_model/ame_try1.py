@@ -149,14 +149,16 @@ def train(model, train_dataset, valid_dataset, batch_size=32, learning_rate=0.00
             torch.save(model.state_dict(), best_model_path)
 
         # Early stopping based on validation loss
-        if avg_val_loss < best_val_loss:
-            best_val_loss = avg_val_loss
-            counter = 0
-        else:
-            counter += 1
-        if counter >= patience:
-            print(f"Early stopping at epoch {epoch+1}")
-            break
+        #if avg_val_loss < best_val_loss:
+            #best_val_loss = avg_val_loss
+            #counter = 0
+        #else:
+            #counter += 1
+        #if counter >= patience:
+            #print(f"Early stopping at epoch {epoch+1}")
+            #break
+
+       
 
         # Step scheduler
         scheduler.step(avg_val_loss)
@@ -204,11 +206,11 @@ def main():
     # Data transforms with augmentation
     transform = transforms.Compose([
         #transforms.Grayscale(),
-        transforms.Resize((48, 48)),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomRotation(10),
-        transforms.RandomAffine(degrees=0, translate=(0.1, 0.1)),
-        transforms.ColorJitter(brightness=0.3, contrast=0.3),
+        #transforms.Resize((48, 48)),
+        #transforms.RandomHorizontalFlip(),
+        #transforms.RandomRotation(10),
+        #transforms.RandomAffine(degrees=0, translate=(0.1, 0.1)),
+        #transforms.ColorJitter(brightness=0.3, contrast=0.3),
         transforms.ToTensor(),
     ])
 
@@ -217,8 +219,8 @@ def main():
     #valid_data = datasets.ImageFolder('fer2013plus/fer2013/test', transform=transform)
 
     # Uncomment for RAF-DB dataset
-    train_data = datasets.ImageFolder('RAF-DB/train', transform=transform)
-    valid_data = datasets.ImageFolder('RAF-DB/test', transform=transform)
+    train_data = datasets.ImageFolder('RAF-DB_clean/train', transform=transform)
+    valid_data = datasets.ImageFolder('RAF-DB_clean/test', transform=transform)
 
     print(f"Train dataset size: {len(train_data)}, Valid dataset size: {len(valid_data)}")
     print(f"Number of classes: {len(train_data.classes)}")
@@ -227,7 +229,7 @@ def main():
     model = EmotionAlexNet(num_classes=len(train_data.classes), use_residual=True)
 
     # Train model
-    best_model_path = train(model, train_data, valid_data, batch_size=64, learning_rate=0.0005, num_epochs=20, save_dir=save_dir)
+    best_model_path = train(model, train_data, valid_data, batch_size=64, learning_rate=0.0005, num_epochs=10, save_dir=save_dir)
 
 if __name__ == '__main__':
     main()

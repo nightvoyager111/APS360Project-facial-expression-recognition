@@ -222,7 +222,7 @@ def main():
 
     # Initialize and train model
     model = EmotionAlexNet(num_classes=len(train_data.classes), use_residual=True)
-    train(model, train_data, valid_data, batch_size=64, learning_rate=0.0005, num_epochs=15, save_dir=save_dir)
+    train(model, train_data, valid_data, batch_size=64, learning_rate=0.0005, num_epochs=20, save_dir=save_dir)
 
 if __name__ == '__main__':
     main()
