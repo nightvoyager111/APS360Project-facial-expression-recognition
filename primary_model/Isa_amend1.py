@@ -171,7 +171,7 @@ def train(model, train_dataset, valid_dataset, batch_size=32, learning_rate=0.00
     plt.plot(iters, val_losses, label="Validation")
     plt.xlabel("Epochs")
     plt.ylabel("Loss")
-    plt.xticks(range(0, num_epochs + 1))  # Set x-axis ticks
+    #plt.xticks(range(0, num_epochs + 1))  # Set x-axis ticks
     plt.legend()
 
     plt.subplot(1, 2, 2)
@@ -180,7 +180,7 @@ def train(model, train_dataset, valid_dataset, batch_size=32, learning_rate=0.00
     plt.plot(iters, val_acc, label="Validation")
     plt.xlabel("Epochs")
     plt.ylabel("Accuracy")
-    plt.xticks(range(0, num_epochs + 1))  # Set x-axis ticks
+    #plt.xticks(range(0, num_epochs + 1))  # Set x-axis ticks
     plt.legend()
 
     plt.tight_layout()
@@ -205,17 +205,21 @@ def main():
         save_dir = './models'
 
     transform = transforms.Compose([
-    #    transforms.Resize((48, 48)),
-    #    transforms.RandomHorizontalFlip(),
-    #    transforms.RandomRotation(10),
-    #    transforms.RandomAffine(degrees=0, translate=(0.1, 0.1)),
-    #    transforms.ColorJitter(brightness=0.3, contrast=0.3),
+        transforms.Resize((48, 48)),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomRotation(10),
+        transforms.RandomAffine(degrees=0, translate=(0.1, 0.1)),
+        transforms.ColorJitter(brightness=0.3, contrast=0.3),
         transforms.ToTensor(),
     ])
 
     # Load RAF-DB dataset
-    train_data = datasets.ImageFolder('RAF-DB_clean/train', transform=transform)
-    valid_data = datasets.ImageFolder('RAF-DB_clean/test', transform=transform)
+    train_data = datasets.ImageFolder('RAF-DB/train', transform=transform)
+    valid_data = datasets.ImageFolder('RAF-DB/test', transform=transform)
+
+      # Load FER2013+ dataset
+    #train_data = datasets.ImageFolder('fer2013plus/fer2013/train', transform=transform)
+    #valid_data = datasets.ImageFolder('fer2013plus/fer2013/test', transform=transform)
 
     print(f"Train dataset size: {len(train_data)}, Valid dataset size: {len(valid_data)}")
     print(f"Number of classes: {len(train_data.classes)}")
