@@ -14,7 +14,7 @@ from primary_model.ame_try1 import EmotionAlexNet
 # Load trained model
 
 
-checkpoint = torch.load('./models/model_EmotionAlexNet_bs64_lr0.0005_epoch18_20250707_151009.pt', map_location=torch.device('cpu'))
+checkpoint = torch.load('./models/model_EmotionAlexNet_bs64_lr0.0005_epoch20_20250710_020716.pt', map_location=torch.device('cpu'))
 model = EmotionAlexNet(num_classes=7, use_residual=True)
 
 # Filter out classifier parameters from checkpoint
