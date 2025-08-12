@@ -7,10 +7,10 @@ from collections import defaultdict
 import numpy as np
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from primary_model.ame_try1 import EmotionAlexNet
+from primary_model.Isa_try2 import EmotionAlexNet
 
 model = EmotionAlexNet(num_classes=7, use_residual=True)
-checkpoint = torch.load('models/model_EmotionAlexNet_bs64_lr0.0005_epoch18_20250707_151009.pt', map_location=torch.device('cpu'))
+checkpoint = torch.load('models/BEST_EmotionAlexNet_RAFDB_epoch18_20250807_152345.pt')
 model.load_state_dict(checkpoint)
 model.eval()
 
