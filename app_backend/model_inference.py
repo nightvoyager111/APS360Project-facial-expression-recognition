@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from primary_model.Isa_try2 import EmotionAlexNet
 
 model = EmotionAlexNet(num_classes=7, use_residual=True)
-checkpoint = torch.load('../models/BEST_EmotionAlexNet_RAFDB_epoch18_20250807_152345.pt')
+checkpoint = torch.load('../models/BEST_EmotionAlexNet_RAFDB_epoch18_20250810_012019.pt')
 model.load_state_dict(checkpoint)
 model.eval()
 
