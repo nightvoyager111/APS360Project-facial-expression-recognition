@@ -11,7 +11,28 @@ from primary_model.Isa_try2 import EmotionAlexNet
 
 model = EmotionAlexNet(num_classes=7, use_residual=True)
 checkpoint = torch.load('./models/BEST_EmotionAlexNet_RAFDB_epoch18_20250810_012019.pt')
-model.load_state_dict(checkpoint)
+
+try:
+    model.load_state_dict(checkpoint)
+except RuntimeError as e:
+    sd = model.state_dict()
+    conv_keys = [k for k in sd.keys() if 'conv' in k]
+    patched = False
+    for k in conv_keys:
+        if k in sd and sd[k].ndim == 4:
+            ck_w = checkpoint[k]
+            md_w = sd[k]
+            if ck_w.shape[2:] == md_w.shape[2:] and ck_w.shape[0] == md_w.shape[0] and ck_w.shape[1] != md_w.shape[1]:
+                if md_w.shape[1] == 1 and ck_w.shape[1] == 3:
+                    checkpoint[k] = ck_w.mean(dim=1, keepdim=True)
+                    patched = True
+                    break
+                elif md_w.shape[1] == 3 and ck_w.shape[1] == 1:
+                    checkpoint[k] = ck_w.repeat(1, 3, 1, 1) / 3.0
+                    patched = True
+                    break
+    model.load_state_dict(checkpoint, strict=False if patched else True)
+    
 model.eval()
 
 emotion_classes = ['anger', 'disgust', 'fear', 'happiness', 'neutral', 'sadness', 'surprise']   
