@@ -8,14 +8,11 @@ from collections import defaultdict
 import numpy as np
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from primary_model.Isa_amend1 import EmotionAlexNet
+from primary_model.ame_try1 import EmotionAlexNet
 
 model = EmotionAlexNet(num_classes=7, use_residual=True)
-ckpt = torch.load('./models/BEST_EmotionAlexNet_RAFDB_epoch18_20250810_012019.pt', map_location='cpu')
-sd = ckpt.get('state_dict', ckpt)
-            
-model.load_state_dict(sd, strict=False)
-    
+checkpoint = torch.load('models/model_EmotionAlexNet_bs64_lr0.0005_epoch18_20250707_151009.pt', map_location=torch.device('cpu'))
+model.load_state_dict(checkpoint)
 model.eval()
 
 emotion_classes = ['anger', 'disgust', 'fear', 'happiness', 'neutral', 'sadness', 'surprise']   
