@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 import os
 from torchvision import datasets, transforms
+from sklearn.metrics import precision_score, recall_score, f1_score, classification_report, confusion_matrix, ConfusionMatrixDisplay
 
 # ------------------ Device Setup ------------------
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -35,7 +36,6 @@ class EmotionAlexNet(nn.Module):
         self.name = "EmotionAlexNet"
         self.use_residual = use_residual
 
-        # Feature extractor
         self.features = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=5, stride=1, padding=2),
             nn.BatchNorm2d(64),
@@ -88,6 +88,24 @@ def get_accuracy(model, loader, device):
             total += labels.size(0)
     return correct / total
 
+# ------------------ Metrics Evaluation ------------------
+def get_metrics(model, loader, device):
+    model.eval()
+    y_true, y_pred = [], []
+    with torch.no_grad():
+        for features, labels in loader:
+            features, labels = features.to(device), labels.to(device)
+            outputs = model(features)
+            _, predicted = torch.max(outputs, 1)
+            y_true.extend(labels.cpu().numpy())
+            y_pred.extend(predicted.cpu().numpy())
+
+    precision = precision_score(y_true, y_pred, average='weighted', zero_division=0)
+    recall = recall_score(y_true, y_pred, average='weighted', zero_division=0)
+    f1 = f1_score(y_true, y_pred, average='weighted', zero_division=0)
+    accuracy = sum(p == t for p, t in zip(y_pred, y_true)) / len(y_true)
+    return accuracy, precision, recall, f1, y_true, y_pred
+
 # ------------------ Training Loop ------------------
 def train(model, train_dataset, valid_dataset, batch_size=32, learning_rate=0.001, num_epochs=20, save_dir='./models'):
     model = model.to(device)
@@ -101,11 +119,10 @@ def train(model, train_dataset, valid_dataset, batch_size=32, learning_rate=0.00
 
     os.makedirs(save_dir, exist_ok=True)
 
-    iters, losses, val_losses, train_acc, val_acc = [], [], [], [], []
+    iters, losses, val_losses = [], [], []
+    train_acc_list, val_acc_list = [], []
+    precision_list, recall_list, f1_list = [], [], []
     best_val_acc = 0
-    best_val_loss = float('inf')
-    patience = 5
-    counter = 0
     best_model_path = None
 
     for epoch in range(num_epochs):
@@ -122,9 +139,11 @@ def train(model, train_dataset, valid_dataset, batch_size=32, learning_rate=0.00
 
         avg_loss = running_loss / len(train_loader)
         train_accuracy = get_accuracy(model, train_loader, device)
-        val_accuracy = get_accuracy(model, valid_loader, device)
 
-        # Validation loss
+        # Validation metrics
+        val_accuracy, precision, recall, f1, y_true, y_pred = get_metrics(model, valid_loader, device)
+
+        # Validation loss calculation
         model.eval()
         val_loss = 0.0
         with torch.no_grad():
@@ -135,61 +154,57 @@ def train(model, train_dataset, valid_dataset, batch_size=32, learning_rate=0.00
                 val_loss += loss.item()
         avg_val_loss = val_loss / len(valid_loader)
 
-        # Record metrics
         iters.append(epoch)
         losses.append(avg_loss)
         val_losses.append(avg_val_loss)
-        train_acc.append(train_accuracy)
-        val_acc.append(val_accuracy)
+        train_acc_list.append(train_accuracy)
+        val_acc_list.append(val_accuracy)
+        precision_list.append(precision)
+        recall_list.append(recall)
+        f1_list.append(f1)
 
-        # Save best model
+        # Save best model by validation accuracy
         if val_accuracy > best_val_acc:
             best_val_acc = val_accuracy
-            best_model_path = os.path.join(save_dir, f'BEST_{model.name}_RAFDB_epoch{epoch+1}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pt')
+            best_model_path = os.path.join(save_dir, f'BEST_{model.name}_epoch{epoch+1}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pt')
             torch.save(model.state_dict(), best_model_path)
-
-        # Early stopping
-        #if avg_val_loss < best_val_loss:
-        #    best_val_loss = avg_val_loss
-        #    counter = 0
-        #else:
-        #    counter += 1
-        #if counter >= patience:
-        #    print(f"Early stopping at epoch {epoch+1}")
-        #    break
 
         scheduler.step(avg_val_loss)
 
-        print(f"Epoch {epoch+1}/{num_epochs}, Train Loss: {avg_loss:.4f}, Train Acc: {train_accuracy:.4f}, Val Loss: {avg_val_loss:.4f}, Val Acc: {val_accuracy:.4f}")
+        print(f"Epoch {epoch+1}/{num_epochs} | "
+              f"Train Loss: {avg_loss:.4f} | Train Acc: {train_accuracy:.4f} | "
+              f"Val Loss: {avg_val_loss:.4f} | Val Acc: {val_accuracy:.4f} | "
+              f"Precision: {precision:.4f} | Recall: {recall:.4f} | F1: {f1:.4f}")
 
-    # Plot and save loss and accuracy
-    plt.figure(figsize=(12, 5))
+    # After training, print detailed classification report and confusion matrix
+    print("\nDetailed Classification Report on Validation Set:")
+    print(classification_report(y_true, y_pred, target_names=valid_dataset.classes, digits=4))
 
-    plt.subplot(1, 2, 1)
-    plt.title("Training and Validation Loss")
-    plt.plot(iters, losses, label="Train")
-    plt.plot(iters, val_losses, label="Validation")
-    plt.xlabel("Epochs")
-    plt.ylabel("Loss")
-    #plt.xticks(range(0, num_epochs + 1))  # Set x-axis ticks
+    cm = confusion_matrix(y_true, y_pred)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=valid_dataset.classes)
+    disp.plot(cmap=plt.cm.Blues, xticks_rotation=45)
+    plt.title("Confusion Matrix - Validation Set")
+    plt.show()
+
+    # Plot loss, accuracy, precision, recall, and F1 curves
+    plt.figure(figsize=(16, 6))
+    
+
+    plt.subplot(1, 3, 3)
+    plt.plot(iters, precision_list, label='Precision')
+    plt.plot(iters, recall_list, label='Recall')
+    plt.plot(iters, f1_list, label='F1-score')
+    plt.xlabel('Epoch')
+    plt.ylabel('Score')
     plt.legend()
-
-    plt.subplot(1, 2, 2)
-    plt.title("Training and Validation Accuracy")
-    plt.plot(iters, train_acc, label="Train")
-    plt.plot(iters, val_acc, label="Validation")
-    plt.xlabel("Epochs")
-    plt.ylabel("Accuracy")
-    #plt.xticks(range(0, num_epochs + 1))  # Set x-axis ticks
-    plt.legend()
+    plt.title('Precision, Recall, F1 Score')
 
     plt.tight_layout()
-    plot_name = f'{model.name}_RAFDB_lr{learning_rate}_bs{batch_size}_metrics_{datetime.now().strftime("%Y%m%d_%H%M%S")}.png'
+    plot_name = f'{model.name}_metrics_{datetime.now().strftime("%Y%m%d_%H%M%S")}.png'
     plt.savefig(os.path.join(save_dir, plot_name))
     plt.show()
 
-    print(f"Final Training Accuracy: {train_acc[-1]:.4f}")
-    print(f"Final Validation Accuracy: {val_acc[-1]:.4f}")
+    print(f"Best model saved at: {best_model_path}")
     return best_model_path
 
 # ------------------ Main Entry Point ------------------
@@ -213,18 +228,13 @@ def main():
         transforms.ToTensor(),
     ])
 
-    # Load RAF-DB dataset
-    #train_data = datasets.ImageFolder('RAF-DB/train', transform=transform)
-    #valid_data = datasets.ImageFolder('RAF-DB/test', transform=transform)
-
-      # Load FER2013+ dataset
-    train_data = datasets.ImageFolder('fer2013plus/fer2013/train', transform=transform)
-    valid_data = datasets.ImageFolder('fer2013plus/fer2013/test', transform=transform)
+    # Load dataset - adjust paths as needed
+    train_data = datasets.ImageFolder('RAF-DB/train', transform=transform)
+    valid_data = datasets.ImageFolder('RAF-DB /test', transform=transform)
 
     print(f"Train dataset size: {len(train_data)}, Valid dataset size: {len(valid_data)}")
     print(f"Number of classes: {len(train_data.classes)}")
 
-    # Initialize and train model
     model = EmotionAlexNet(num_classes=len(train_data.classes), use_residual=True)
     train(model, train_data, valid_data, batch_size=64, learning_rate=0.0005, num_epochs=20, save_dir=save_dir)
 
