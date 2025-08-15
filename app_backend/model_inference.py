@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 from PIL import Image
 from torchvision import transforms
 import sys, os
@@ -36,18 +37,21 @@ transform = transforms.Compose([
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
 def predict_emotion(pil_img):
-    cv_img = np.array(pil_img.convert('RGB'))
-    gray = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
+    pil_rgb = pil_img.convert('RGB')
+    rgb = np.array(pil_rgb) 
+    gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
     
     faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
     if len(faces) == 0:
         return {"error": "No face detected"}
     
-    x, y, w, h = sorted(faces, key=lambda b: b[2] * b[3], reverse=True)[0]
+    x, y, w, h = max(faces, key=lambda b: b[2] * b[3])
     
-    face_img = Image.fromarray(gray[y:y+h, x:x+w]).convert('RGB')
-    input_tensor = transform(face_img).unsqueeze(0)
+    face_rgb = rgb[y:y+h, x:x+w] 
+    face_pil = Image.fromarray(face_rgb)
 
+    input_tensor = transform(face_pil).unsqueeze(0)
+    
     with torch.no_grad():
         output = model(input_tensor)
         probs = torch.exp(output).squeeze().numpy()
